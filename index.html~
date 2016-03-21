@@ -447,7 +447,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 Our team desperately needs coffee, but none of us dare open the office door.</p>
 </div>
 <div id=pdf>
-<object data="PDI.pdf" type="application/pdf" width="100%" height="100%">
+<object data="PDI.pdf" type="application/pdf" width="120%" height="150%">
 <a href="PDI.pdf">PDI.pdf</a>
 </object>
 </div> 
