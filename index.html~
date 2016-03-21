@@ -421,11 +421,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <!--
 #pdf {
 	width: 100%;
-<<<<<<< HEAD
-	height: 600px;
-=======
-	height: 150%;
->>>>>>> parent of 50b20a0... PDF height = 150%
+	height: 100%;
 	margin: 2em auto;
 	border: 10px solid #6699FF;
 }
@@ -452,7 +448,11 @@ Our team desperately needs coffee, but none of us dare open the office door.</p>
 </div>
 <div id=pdf>
 <object data="PDI.pdf" type="application/pdf" width="100%" height="100%">
+<<<<<<< HEAD
 alt: <a href="PDI.pdf">teste.pdf</a>
+=======
+<a href="PDI.pdf">PDI.pdf</a>
+>>>>>>> parent of 50b20a0... PDF height = 150%
 </object>
 </div> 
 <div class="paragraph">
