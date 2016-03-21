@@ -425,11 +425,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>This journey begins one late Monday afternoon in Antwerp.
 Our team desperately needs coffee, but none of us dare open the office door.</p>
 </div>
-<div>
-<object data="PDI.pdf" type="application/pdf" width="300" height="200">
-alt : <a href="PDI.pdf">test.pdf</a>
-</object>
-</div> 
+
+
 <div class="paragraph">
 <p>To leave means code dismemberment and certain death.</p>
 </div>
