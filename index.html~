@@ -420,8 +420,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <style type="text/css">
 <!--
 #pdf {
-	width: 90%;
-	height: 600px;
+	width: 100%;
+	height: 100%;
 	margin: 2em auto;
 	border: 10px solid #6699FF;
 }
@@ -435,7 +435,6 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 -->
 </style>
 </head>
-
 <body class="article">
 <div id="header">
 </div>
