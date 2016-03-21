@@ -421,7 +421,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <!--
 #pdf {
 	width: 100%;
+<<<<<<< HEAD
 	height: 600px;
+=======
+	height: 150%;
+>>>>>>> parent of 50b20a0... PDF height = 150%
 	margin: 2em auto;
 	border: 10px solid #6699FF;
 }
