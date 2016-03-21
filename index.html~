@@ -445,7 +445,11 @@ Our team desperately needs coffee, but none of us dare open the office door.</p>
 </div>
 <div id=pdf>
 <object data="PDI.pdf" type="application/pdf" width="100%" height="100%">
-<a href="PDI.pdf">PDI.pdf</a>
+ 
+  <p>It appears you don't have a PDF plugin for this browser.
+  No biggie... you can <a href="PDI.pdf">click here to
+  download the PDF file.</a></p>
+  
 </object>
 </div> 
 <div class="paragraph">
