@@ -1321,6 +1321,226 @@ http://www.gnu.org/software/src-highlite -->
 <div class="paragraph"><p>A normalização antes da exponencial não é realizada na aplicação do filtro homomórfico original. Entretanto, sem essa normalização obteve-se apenas imagem totalmente preta como resultado da filtragem. Logo, foi utilizado esse artifício para viabilizar a utilização do filtro homomórfico</p></div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_pontilhismo">Pontilhismo</h3>
+<div class="paragraph"><p>O Exercício 11. 1 consiste em desenvolver o programa cannypoints.cpp A ideia é usar as bordas produzidas pelo algoritmo de Canny  para melhorar a qualidade da imagem pontilhista gerada
+Dessa forma, para os testes gerados com o programa cannypoints.cpp, foram obtidos os seguintes resultados:</p></div>
+<div class="imageblock">
+<div class="content">
+<img src="Brasil.png" alt="Brasil.png" width="500" />
+</div>
+</div>
+<div class="paragraph"><p>Utilizando as configurações de STEP=10, threshold =3, JITTER =2 e RAIO =1, foi obtida a figura a seguir:</p></div>
+<div class="imageblock">
+<div class="content">
+<img src="Brasil2.png" alt="Brasil2.png" width="500" />
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre><code>FIGURA2 – Imagem gerada a partir da Figura 1 após tratamento com o cannypoints.cpp</code></pre>
+</div></div>
+<div class="paragraph"><p>A fim de fazer outros testes tem-se a seguinte figura  a ser editada:</p></div>
+<div class="imageblock">
+<div class="content">
+<img src="Ufrn.png" alt="Ufrn.png" width="500" />
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre><code>Figura 3 – Imagem original</code></pre>
+</div></div>
+<div class="paragraph"><p>Na imagem resultante observa-se na grandeza STEP, que define o passo usado para varrer a imagem de referência foi usada no valor 155, o raio foi mantido constante (1) e a imagem gerada apresenta bastante nitidez em relação à imagem original.</p></div>
+<div class="imageblock">
+<div class="content">
+<img src="Ufrn2.png" alt="Ufrn2.png" width="500" />
+</div>
+</div>
+<div class="literalblock">
+<div class="content">
+<pre><code>FIGURA 4 – Imagem gerada a partir da Figura 3 após tratamento com o cannypoints.cpp</code></pre>
+</div></div>
+<div class="paragraph"><p>Para a obtenção desses resultados, foram desenhados pontos na imagem pontilhista básica obtida da imagem original.</p></div>
+<div class="paragraph"><p>Foi usada a posição dos pixels de borda encontrados pelo algoritmo de Canny para desenhar pontos (círculos de raio variável) nos respectivos locais na imagem gerada.</p></div>
+<div class="paragraph"><p>Os testes realizados consistiram em ir aumentando (ou diminuindo) os limiares do algoritmo de Canny e, para cada novo par de limiares, desenhado círculos cada vez menores (ou menores) nas posições encontradas.</p></div>
+<div class="paragraph"><p>As ferramentes utilizadas no OpenCV são as bibliotecas e funções especificadas no código  (cannypoints.cpp) comentado a seguir.
+Vale destratar que o cannypoints.cpp é fundamentado no “algoritmo de Canny”  (canny.cpp) e no  programa “arte com pontilhismo”  (pontilhismo.cpp), presentes no tutorial da disciplina Processamento Digital de Imagens.</p></div>
+<div class="sect3">
+<h4 id="_código">Código</h4>
+<div class="listingblock">
+<div class="content"><!-- Generator: GNU source-highlight 3.1.7
+by Lorenzo Bettini
+http://www.lorenzobettini.it
+http://www.gnu.org/software/src-highlite -->
+<pre><tt><span style="font-weight: bold"><span style="color: #000080">#include</span></span> <span style="color: #FF0000">&lt;iostream&gt;</span>
+<span style="font-weight: bold"><span style="color: #000080">#include</span></span> <span style="color: #FF0000">&lt;opencv2/opencv.hpp&gt;</span>
+
+<span style="font-weight: bold"><span style="color: #000080">#include</span></span> <span style="color: #FF0000">&lt;fstream&gt;</span>
+<span style="font-weight: bold"><span style="color: #000080">#include</span></span> <span style="color: #FF0000">&lt;iomanip&gt;</span>
+<span style="font-weight: bold"><span style="color: #000080">#include</span></span> <span style="color: #FF0000">&lt;vector&gt;</span>
+<span style="font-weight: bold"><span style="color: #000080">#include</span></span> <span style="color: #FF0000">&lt;algorithm&gt;</span>
+<span style="font-weight: bold"><span style="color: #000080">#include</span></span> <span style="color: #FF0000">&lt;numeric&gt;</span>
+<span style="font-weight: bold"><span style="color: #000080">#include</span></span> <span style="color: #FF0000">&lt;ctime&gt;</span>
+<span style="font-weight: bold"><span style="color: #000080">#include</span></span> <span style="color: #FF0000">&lt;cstdlib&gt;</span>
+
+<span style="font-weight: bold"><span style="color: #0000FF">using</span></span> <span style="font-weight: bold"><span style="color: #0000FF">namespace</span></span> std<span style="color: #990000">;</span>
+<span style="font-weight: bold"><span style="color: #0000FF">using</span></span> <span style="font-weight: bold"><span style="color: #0000FF">namespace</span></span> cv<span style="color: #990000">;</span>
+
+<span style="color: #009900">int</span> top_slider <span style="color: #990000">=</span> <span style="color: #993399">10</span><span style="color: #990000">;</span>
+<span style="color: #009900">int</span> top_slider_max <span style="color: #990000">=</span> <span style="color: #993399">200</span><span style="color: #990000">;</span>
+
+
+
+<span style="font-style: italic"><span style="color: #9A1900">//#define STEP 5</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">//#define JITTER 3</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">//#define RAIO 3</span></span>
+
+
+<span style="font-style: italic"><span style="color: #9A1900">//STEP define o passo usado para varrer a imagem de referência</span></span>
+<span style="color: #009900">int</span> STEP <span style="color: #990000">=</span> <span style="color: #993399">1</span><span style="color: #990000">;</span>
+<span style="color: #009900">int</span> STEP_max <span style="color: #990000">=</span> <span style="color: #993399">8</span><span style="color: #990000">;</span>
+
+<span style="color: #009900">int</span> JITTER <span style="color: #990000">=</span> <span style="color: #993399">2</span><span style="color: #990000">;</span>
+<span style="color: #009900">int</span> JITTER_max <span style="color: #990000">=</span> <span style="color: #993399">15</span><span style="color: #990000">;</span>
+
+<span style="color: #009900">int</span> RAIO <span style="color: #990000">=</span> <span style="color: #993399">1</span><span style="color: #990000">;</span>
+<span style="color: #009900">int</span> RAIO_max <span style="color: #990000">=</span> <span style="color: #993399">8</span><span style="color: #990000">;</span>
+
+
+<span style="font-style: italic"><span style="color: #9A1900">//char TrackbarName[50];</span></span>
+<span style="color: #008080">Mat</span> cannyPoints<span style="color: #990000">;</span>
+<span style="color: #008080">Mat</span> image<span style="color: #990000">,</span> border<span style="color: #990000">;</span>
+
+<span style="color: #009900">void</span> <span style="font-weight: bold"><span style="color: #000000">on_trackbar_canny</span></span><span style="color: #990000">(</span><span style="color: #009900">int</span><span style="color: #990000">,</span> <span style="color: #009900">void</span><span style="color: #990000">*)</span><span style="color: #FF0000">{</span>
+  <span style="font-style: italic"><span style="color: #9A1900">//Canny(image, border, top_slider, 3*top_slider);</span></span>
+
+
+  <span style="color: #009900">int</span> width<span style="color: #990000">,</span> height<span style="color: #990000">;</span>
+  <span style="color: #009900">int</span> x<span style="color: #990000">,</span> y<span style="color: #990000">,</span> gray<span style="color: #990000">;</span>
+
+  <span style="color: #008080">Vec3b</span> val<span style="color: #990000">;</span>
+
+  <span style="font-style: italic"><span style="color: #9A1900">//arrays de índices que servirão para identificar elementos da imagem de referência</span></span>
+  <span style="color: #008080">vector&lt;int&gt;</span> yrange<span style="color: #990000">;</span>
+  <span style="color: #008080">vector&lt;int&gt;</span> xrange<span style="color: #990000">;</span>
+
+  width <span style="color: #990000">=</span> image<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">size</span></span><span style="color: #990000">().</span>width<span style="color: #990000">;</span>
+  height <span style="color: #990000">=</span> image<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">size</span></span><span style="color: #990000">().</span>height<span style="color: #990000">;</span>
+
+  <span style="font-weight: bold"><span style="color: #000000">Canny</span></span><span style="color: #990000">(</span>image<span style="color: #990000">,</span> border<span style="color: #990000">,</span> top_slider<span style="color: #990000">,</span> <span style="color: #993399">3</span><span style="color: #990000">*</span>top_slider<span style="color: #990000">);</span>
+  <span style="font-style: italic"><span style="color: #9A1900">//imshow("canny", border);</span></span>
+
+  <span style="font-weight: bold"><span style="color: #0000FF">if</span></span><span style="color: #990000">(</span>STEP <span style="color: #990000">&lt;</span> <span style="color: #993399">1</span><span style="color: #990000">)</span><span style="color: #FF0000">{</span>
+   STEP <span style="color: #990000">=</span> <span style="color: #993399">1</span><span style="color: #990000">;</span>
+  <span style="color: #FF0000">}</span>
+
+  <span style="font-weight: bold"><span style="color: #0000FF">if</span></span><span style="color: #990000">(</span>JITTER <span style="color: #990000">&lt;</span> <span style="color: #993399">1</span><span style="color: #990000">)</span><span style="color: #FF0000">{</span>
+   JITTER <span style="color: #990000">=</span> <span style="color: #993399">1</span><span style="color: #990000">;</span>
+  <span style="color: #FF0000">}</span>
+
+
+  xrange<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">resize</span></span><span style="color: #990000">(</span>height<span style="color: #990000">/</span>STEP<span style="color: #990000">);</span>
+  yrange<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">resize</span></span><span style="color: #990000">(</span>width<span style="color: #990000">/</span>STEP<span style="color: #990000">);</span>
+
+<span style="font-style: italic"><span style="color: #9A1900">//xrange e yrange são preenchidos com valores sequenciais iniciando em 0 e,</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">//em seguida, esses valores recebem um ganho igual a STEP e um deslocamento STEP/2</span></span>
+
+  <span style="font-weight: bold"><span style="color: #000000">iota</span></span><span style="color: #990000">(</span>xrange<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">begin</span></span><span style="color: #990000">(),</span> xrange<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">end</span></span><span style="color: #990000">(),</span> <span style="color: #993399">0</span><span style="color: #990000">);</span>
+  <span style="font-weight: bold"><span style="color: #000000">iota</span></span><span style="color: #990000">(</span>yrange<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">begin</span></span><span style="color: #990000">(),</span> yrange<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">end</span></span><span style="color: #990000">(),</span> <span style="color: #993399">0</span><span style="color: #990000">);</span>
+
+  <span style="font-weight: bold"><span style="color: #0000FF">for</span></span><span style="color: #990000">(</span><span style="color: #008080">uint</span> i<span style="color: #990000">=</span><span style="color: #993399">0</span><span style="color: #990000">;</span> i<span style="color: #990000">&lt;</span>xrange<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">size</span></span><span style="color: #990000">();</span> i<span style="color: #990000">++)</span><span style="color: #FF0000">{</span>
+    xrange<span style="color: #990000">[</span>i<span style="color: #990000">]=</span> xrange<span style="color: #990000">[</span>i<span style="color: #990000">]*</span>STEP<span style="color: #990000">+</span>STEP<span style="color: #990000">/</span><span style="color: #993399">2</span><span style="color: #990000">;</span>
+   <span style="font-style: italic"><span style="color: #9A1900">// yrange[i]= yrange[i]*STEP+STEP/2;</span></span>
+  <span style="color: #FF0000">}</span>
+
+  <span style="font-weight: bold"><span style="color: #0000FF">for</span></span><span style="color: #990000">(</span><span style="color: #008080">uint</span> i<span style="color: #990000">=</span><span style="color: #993399">0</span><span style="color: #990000">;</span> i<span style="color: #990000">&lt;</span>yrange<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">size</span></span><span style="color: #990000">();</span> i<span style="color: #990000">++)</span><span style="color: #FF0000">{</span>
+    yrange<span style="color: #990000">[</span>i<span style="color: #990000">]=</span> yrange<span style="color: #990000">[</span>i<span style="color: #990000">]*</span>STEP<span style="color: #990000">+</span>STEP<span style="color: #990000">/</span><span style="color: #993399">2</span><span style="color: #990000">;</span>
+  <span style="color: #FF0000">}</span>
+
+  <span style="font-style: italic"><span style="color: #9A1900">//cannyPoints = Mat(height, width, CV_8U, Scalar(255));</span></span>
+  cannyPoints <span style="color: #990000">=</span> <span style="font-weight: bold"><span style="color: #000000">Mat</span></span><span style="color: #990000">(</span>height<span style="color: #990000">,</span>width<span style="color: #990000">,</span> CV_8UC3<span style="color: #990000">,</span> <span style="font-weight: bold"><span style="color: #000000">Scalar</span></span><span style="color: #990000">(</span><span style="color: #993399">255</span><span style="color: #990000">,</span><span style="color: #993399">255</span><span style="color: #990000">,</span><span style="color: #993399">255</span><span style="color: #990000">));</span>
+
+
+  <span style="font-style: italic"><span style="color: #9A1900">//a função a seguir é usada para embaralhar aleatoriamente</span></span>
+  <span style="font-weight: bold"><span style="color: #000000">random_shuffle</span></span><span style="color: #990000">(</span>xrange<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">begin</span></span><span style="color: #990000">(),</span> xrange<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">end</span></span><span style="color: #990000">());</span>
+
+  <span style="font-style: italic"><span style="color: #9A1900">//Os loops a seguir servem para fazer as variáveis i e j assumirem,</span></span>
+  <span style="font-style: italic"><span style="color: #9A1900">// a cada passada no loop, os valores dos arrays xrange e yrange de forma consecutiva.</span></span>
+  <span style="font-weight: bold"><span style="color: #0000FF">for</span></span><span style="color: #990000">(</span><span style="font-weight: bold"><span style="color: #0000FF">auto</span></span> i <span style="color: #990000">:</span> xrange<span style="color: #990000">)</span><span style="color: #FF0000">{</span>
+    <span style="font-weight: bold"><span style="color: #000000">random_shuffle</span></span><span style="color: #990000">(</span>yrange<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">begin</span></span><span style="color: #990000">(),</span> yrange<span style="color: #990000">.</span><span style="font-weight: bold"><span style="color: #000000">end</span></span><span style="color: #990000">());</span>
+    <span style="font-weight: bold"><span style="color: #0000FF">for</span></span><span style="color: #990000">(</span><span style="font-weight: bold"><span style="color: #0000FF">auto</span></span> j <span style="color: #990000">:</span> yrange<span style="color: #990000">)</span><span style="color: #FF0000">{</span>
+
+      x <span style="color: #990000">=</span> i<span style="color: #990000">+</span><span style="font-weight: bold"><span style="color: #000000">rand</span></span><span style="color: #990000">()%(</span><span style="color: #993399">2</span><span style="color: #990000">*</span>JITTER<span style="color: #990000">)-</span>JITTER<span style="color: #990000">+</span><span style="color: #993399">1</span><span style="color: #990000">;</span>
+      y <span style="color: #990000">=</span> j<span style="color: #990000">+</span><span style="font-weight: bold"><span style="color: #000000">rand</span></span><span style="color: #990000">()%(</span><span style="color: #993399">2</span><span style="color: #990000">*</span>JITTER<span style="color: #990000">)-</span>JITTER<span style="color: #990000">+</span><span style="color: #993399">1</span><span style="color: #990000">;</span>
+      gray <span style="color: #990000">=</span> image<span style="color: #990000">.</span>at<span style="color: #990000">&lt;</span>uchar<span style="color: #990000">&gt;(</span>x<span style="color: #990000">,</span>y<span style="color: #990000">);</span>
+
+
+
+      val<span style="color: #990000">[</span><span style="color: #993399">0</span><span style="color: #990000">]</span> <span style="color: #990000">=</span> <span style="color: #990000">(</span><span style="color: #009900">int</span><span style="color: #990000">)(</span>image<span style="color: #990000">.</span>at<span style="color: #990000">&lt;</span>Vec3b<span style="color: #990000">&gt;(</span>x<span style="color: #990000">,</span>y<span style="color: #990000">)[</span><span style="color: #993399">2</span><span style="color: #990000">]);</span>
+      val<span style="color: #990000">[</span><span style="color: #993399">1</span><span style="color: #990000">]</span> <span style="color: #990000">=</span> <span style="color: #990000">(</span><span style="color: #009900">int</span><span style="color: #990000">)(</span>image<span style="color: #990000">.</span>at<span style="color: #990000">&lt;</span>Vec3b<span style="color: #990000">&gt;(</span>x<span style="color: #990000">,</span>y<span style="color: #990000">)[</span><span style="color: #993399">1</span><span style="color: #990000">]);</span>
+      val<span style="color: #990000">[</span><span style="color: #993399">2</span><span style="color: #990000">]</span> <span style="color: #990000">=</span> <span style="color: #990000">(</span><span style="color: #009900">int</span><span style="color: #990000">)(</span>image<span style="color: #990000">.</span>at<span style="color: #990000">&lt;</span>Vec3b<span style="color: #990000">&gt;(</span>x<span style="color: #990000">,</span>y<span style="color: #990000">)[</span><span style="color: #993399">0</span><span style="color: #990000">]);</span>
+
+<span style="font-style: italic"><span style="color: #9A1900">//A funcao a seguir eh usada para tracar um circulo de raio</span></span>
+<span style="font-style: italic"><span style="color: #9A1900">// especificado em um ponto determinado pelo usuario</span></span>
+
+      <span style="font-weight: bold"><span style="color: #000000">circle</span></span><span style="color: #990000">(</span>cannyPoints<span style="color: #990000">,</span>
+             cv<span style="color: #990000">::</span><span style="font-weight: bold"><span style="color: #000000">Point</span></span><span style="color: #990000">(</span>y<span style="color: #990000">,</span>x<span style="color: #990000">),</span>
+             RAIO<span style="color: #990000">,</span>
+             <span style="font-weight: bold"><span style="color: #000000">CV_RGB</span></span><span style="color: #990000">(</span>val<span style="color: #990000">[</span><span style="color: #993399">0</span><span style="color: #990000">],</span>val<span style="color: #990000">[</span><span style="color: #993399">1</span><span style="color: #990000">],</span>val<span style="color: #990000">[</span><span style="color: #993399">2</span><span style="color: #990000">]),</span>
+             <span style="color: #990000">-</span><span style="color: #993399">1</span><span style="color: #990000">,</span>
+             CV_AA<span style="color: #990000">);</span>
+    <span style="color: #FF0000">}</span>
+  <span style="color: #FF0000">}</span>
+
+  <span style="font-weight: bold"><span style="color: #000000">imshow</span></span><span style="color: #990000">(</span><span style="color: #FF0000">"Exer. 11.1 - cannyPoints"</span><span style="color: #990000">,</span> cannyPoints<span style="color: #990000">);</span>
+  <span style="font-style: italic"><span style="color: #9A1900">//return 0;</span></span>
+<span style="color: #FF0000">}</span>
+
+<span style="color: #009900">int</span> <span style="font-weight: bold"><span style="color: #000000">main</span></span><span style="color: #990000">(</span><span style="color: #009900">int</span> argc<span style="color: #990000">,</span> <span style="color: #009900">char</span><span style="color: #990000">**</span>argv<span style="color: #990000">)</span><span style="color: #FF0000">{</span>
+
+  image <span style="color: #990000">=</span> <span style="font-weight: bold"><span style="color: #000000">imread</span></span><span style="color: #990000">(</span>argv<span style="color: #990000">[</span><span style="color: #993399">1</span><span style="color: #990000">],</span>CV_LOAD_IMAGE_COLOR<span style="color: #990000">);</span>
+  <span style="font-style: italic"><span style="color: #9A1900">//image = imread(argv[1],CV_LOAD_IMAGE_GRAYSCALE);</span></span>
+
+  <span style="font-style: italic"><span style="color: #9A1900">//sprintf( TrackbarName, "Threshold inferior", top_slider_max );</span></span>
+
+  <span style="font-weight: bold"><span style="color: #000000">namedWindow</span></span><span style="color: #990000">(</span><span style="color: #FF0000">"Exer. 11.1 - cannyPoints"</span><span style="color: #990000">,</span><span style="color: #993399">1</span><span style="color: #990000">);</span>
+
+  <span style="font-weight: bold"><span style="color: #000000">cvMoveWindow</span></span><span style="color: #990000">(</span> <span style="color: #FF0000">"Exer. 11.1 - cannyPoints"</span><span style="color: #990000">,</span> image<span style="color: #990000">.</span>cols<span style="color: #990000">,</span> <span style="color: #993399">0</span> <span style="color: #990000">);</span>
+
+
+  <span style="font-weight: bold"><span style="color: #000000">createTrackbar</span></span><span style="color: #990000">(</span><span style="color: #FF0000">"STEP"</span><span style="color: #990000">,</span> <span style="color: #FF0000">"Exer. 11.1 - cannyPoints"</span><span style="color: #990000">,</span>
+                <span style="color: #990000">&amp;</span>top_slider<span style="color: #990000">,</span>
+                top_slider_max<span style="color: #990000">,</span>
+                on_trackbar_canny<span style="color: #990000">);</span>
+
+  <span style="font-weight: bold"><span style="color: #000000">createTrackbar</span></span><span style="color: #990000">(</span><span style="color: #FF0000">"Threshold inferior"</span><span style="color: #990000">,</span> <span style="color: #FF0000">"Exer. 11.1 - cannyPoints"</span><span style="color: #990000">,</span>
+                <span style="color: #990000">&amp;</span>STEP<span style="color: #990000">,</span>
+                STEP_max<span style="color: #990000">,</span>
+                on_trackbar_canny<span style="color: #990000">);</span>
+
+  <span style="font-weight: bold"><span style="color: #000000">createTrackbar</span></span><span style="color: #990000">(</span><span style="color: #FF0000">"JITTER"</span><span style="color: #990000">,</span> <span style="color: #FF0000">"Exer. 11.1 - cannyPoints"</span><span style="color: #990000">,</span>
+                <span style="color: #990000">&amp;</span>JITTER<span style="color: #990000">,</span>
+                JITTER_max<span style="color: #990000">,</span>
+                on_trackbar_canny<span style="color: #990000">);</span>
+
+  <span style="font-weight: bold"><span style="color: #000000">createTrackbar</span></span><span style="color: #990000">(</span><span style="color: #FF0000">"RAIO"</span><span style="color: #990000">,</span> <span style="color: #FF0000">"Exer. 11.1 - cannyPoints"</span><span style="color: #990000">,</span>
+                <span style="color: #990000">&amp;</span>RAIO<span style="color: #990000">,</span>
+                RAIO_max<span style="color: #990000">,</span>
+                on_trackbar_canny<span style="color: #990000">);</span>
+
+
+  <span style="font-weight: bold"><span style="color: #000000">on_trackbar_canny</span></span><span style="color: #990000">(</span>top_slider<span style="color: #990000">,</span> <span style="color: #993399">0</span> <span style="color: #990000">);</span>
+
+
+
+
+  <span style="font-weight: bold"><span style="color: #000000">imwrite</span></span><span style="color: #990000">(</span><span style="color: #FF0000">"Exer. 11.1 - cannyPoints.jpg"</span><span style="color: #990000">,</span> cannyPoints<span style="color: #990000">);</span>
+
+  <span style="font-weight: bold"><span style="color: #000000">waitKey</span></span><span style="color: #990000">();</span>
+  <span style="font-weight: bold"><span style="color: #0000FF">return</span></span> <span style="color: #993399">0</span><span style="color: #990000">;</span>
+<span style="color: #FF0000">}</span></tt></pre></div></div>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -1328,7 +1548,7 @@ http://www.gnu.org/software/src-highlite -->
 <div id="footer">
 <div id="footer-text">
 Last updated
- 2016-05-11 23:34:00 BRT
+ 2016-05-11 23:49:51 BRT
 </div>
 </div>
 </body>
