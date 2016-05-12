@@ -455,8 +455,8 @@ Inicializa matrizes de imagem de entrada e filtro
   tmp = Mat(dft_M, dft_N, CV_32F);
 ----
 
-
-
+[source,C]
+----
   for(;;){
     cap >> image;
     cvtColor(image, imagegray, CV_BGR2GRAY);
@@ -474,6 +474,12 @@ Inicializa matrizes de imagem de entrada e filtro
     planos.clear();
     // cria a compoente real
     realInput = Mat_<float>(padded);
+----
+
+Aplica operação de logaritmo sobre a entrada e une parte real e imaginária
+
+[source,C]
+----
     
     //Aplica ln na imagem
     for(int i=0; i<dft_M; i++){
@@ -488,7 +494,12 @@ Inicializa matrizes de imagem de entrada e filtro
 
     // combina o array de matrizes em uma unica componente complexa
     merge(planos, complexImage);
+----
 
+Realiza dft sobre a entrada, desloca e multiplica pelo matriz do filtro ponto-a-ponto
+
+[source,C]
+----
     // calcula o dft
     dft(complexImage, complexImage);
 
@@ -497,7 +508,13 @@ Inicializa matrizes de imagem de entrada e filtro
 
     // aplica o filtro frequencial
     mulSpectrums(complexImage,filter,complexImage,0);
+---
 
+
+Desloca a matriz resultante, calcula a transformada inversa e separa a matriz complexa em parte real e imaginária
+
+[source,C]
+----
     // troca novamente os quadrantes
     deslocaDFT(complexImage);
 
@@ -509,8 +526,12 @@ Inicializa matrizes de imagem de entrada e filtro
 
     // separa as partes real e imaginaria da imagem filtrada
     split(complexImage, planos);
+----
 
+Normaliza a parte real, calcula a exponencial da parte real e normaliza novamente
 
+[source,C]
+----
     // normaliza a parte real para exibicao
     normalize(planos[0], planos[0], 0, 1, CV_MINMAX);
 
@@ -521,16 +542,10 @@ Inicializa matrizes de imagem de entrada e filtro
 	}
     }    
 
-
     normalize(planos[0], planos[0], 0, 1, CV_MINMAX);
-
-    imshow("filtrada", planos[0]);
- 
-    
-    key = (char) waitKey(10);
-    if( key == 27 ) break; // esc pressed!
-  }
-  return 0;
-}
 ----
+
+
+A normalização antes da exponencial não é realizada na aplicação do filtro homomórfico original. Entretanto, sem essa normalização obteve-se apenas imagem totalmente preta como resultado da filtragem. Logo, foi utilizado esse artifício para viabilizar a utilização do filtro homomórfico
+
 
